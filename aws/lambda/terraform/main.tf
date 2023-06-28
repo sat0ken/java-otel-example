@@ -12,21 +12,21 @@ module "lambda" {
   runtime       = local.runtime
 
   create_package         = false
-  local_existing_package = "${path.module}/../demo/build/distributions/demo-0.0.1-SNAPSHOT.zip"
+  local_existing_package = "${path.module}/../demo/build/distributions/demo-no-otel-0.0.1-SNAPSHOT.zip"
 
   memory_size = 512
   timeout     = 15
   publish     = true
 
-  environment_variables = {
+  environment_variables = local.add_otel_layer ? {
     AWS_LAMBDA_EXEC_WRAPPER = "/opt/otel-handler"
-  }
+  } : {}
 
-  # tracing_mode = "Active"
+  tracing_mode = local.add_otel_layer ?  "Active" : null
 
-  # layers = [
-  #   local.otel_layer_arn
-  # ]
+  layers = local.add_otel_layer ? [
+    local.otel_layer_arn
+  ] : null
 
 }
 
