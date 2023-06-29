@@ -3,42 +3,30 @@ package com.example.demo.lambda;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.LongUpDownCounter;
-import io.opentelemetry.api.metrics.Meter;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
 
-import javax.print.attribute.Attribute;
+public class DemoApplication implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-public class DemoApplication implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
-
-	private static final Meter sampleMeter = GlobalOpenTelemetry.meterBuilder("aws-otel")
-			.setInstrumentationVersion("1.0").build();
-	private static final LongUpDownCounter queueSizeCounter =
-			sampleMeter
-					.upDownCounterBuilder("queueSizeChange")
-					.setDescription("Queue Size change")
-					.setUnit("one")
-					.build();
-	private static final AttributeKey<String> API_NAME = AttributeKey.stringKey("apiName");
-	private static final AttributeKey<String> STATUS_CODE = AttributeKey.stringKey("statusCode");
-	private static final Attributes METRIC_ATTRIBUTES =
-			Attributes.builder().put(API_NAME, "apiName").put(STATUS_CODE, "200").build();
-
+	/*
+	example codes
+	https://github.com/awsdocs/aws-lambda-developer-guide/blob/main/sample-apps/java-events/src/main/java/example/HandlerApiGatewayV1.java
+	https://github.com/open-telemetry/opentelemetry-lambda/blob/c6a7138f19999f2c0adb7b5752b263ad76581647/java/sample-apps/aws-sdk/src/main/java/io/opentelemetry/lambda/sampleapps/awssdk/AwsSdkRequestHandler.java
+	 */
 	@Override
-	public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent event, Context context) {
+	public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent event, Context context) {
 		LambdaLogger logger = context.getLogger();
-		logger.log("EVENT TYPE : " + event.getClass().toString());
-		APIGatewayV2HTTPResponse response = new APIGatewayV2HTTPResponse();
-		response.setIsBase64Encoded(false);
-		response.setStatusCode(200);
-		response.setBody("hello");
-
-		queueSizeCounter.add(2, METRIC_ATTRIBUTES);
-
+		logger.log("EVENT TYPE: " + event.getClass().toString());
+		APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
+		try (S3Client s3 = S3Client.create()) {
+			ListBucketsResponse listBucketsResponse = s3.listBuckets();
+			response.setBody(
+					"Hello lambda - found " + listBucketsResponse.buckets().size() + " bucket."
+			);
+		}
 		return response;
 	}
+
 }
