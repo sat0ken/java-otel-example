@@ -19,13 +19,13 @@ module "lambda" {
   publish     = true
 
   environment_variables = local.add_otel_layer ? {
-    AWS_LAMBDA_EXEC_WRAPPER = "/opt/otel-handler"
+    AWS_LAMBDA_EXEC_WRAPPER = "/opt/otel-proxy-handler"
   } : {}
 
   tracing_mode = local.add_otel_layer ?  "Active" : null
 
   layers = local.add_otel_layer ? [
-    local.otel_layer_arn
+    local.otel_wrapper_layer_arn
   ] : null
 
 }
