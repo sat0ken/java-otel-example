@@ -21,7 +21,7 @@ public class DemoController {
         } else {
             logger.info("Anonymous player is rolling the dice: {}", result);
         }
-        return "{\"number\" : %s}".formatted(Integer.toString(result));
+        return "{\"number\" : %s}\n".formatted(Integer.toString(result));
     }
 
     public int getRandomNumber(int min, int max) {
@@ -30,6 +30,6 @@ public class DemoController {
 
     @GetMapping("/health")
     public String health() {
-        return "{\"status\" : \"ok\"}";
+        return "{\"status\" : \"ok\"}\n";
     }
 }
