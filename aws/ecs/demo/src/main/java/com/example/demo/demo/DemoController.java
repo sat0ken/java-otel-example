@@ -27,4 +27,9 @@ public class DemoController {
     public int getRandomNumber(int min, int max) {
         return ThreadLocalRandom.current().nextInt(min, max + 1);
     }
+
+    @GetMapping("/health")
+    public String health() {
+        return "{\"status\" : \"ok\"}";
+    }
 }
