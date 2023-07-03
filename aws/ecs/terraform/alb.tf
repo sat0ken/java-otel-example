@@ -25,7 +25,7 @@ resource "aws_lb" "for_sample_app" {
   security_groups    = [aws_security_group.http.id]
   subnets            = [for subnet in module.vpc.public_subnets: subnet]
 
-  enable_deletion_protection = true
+  enable_deletion_protection = false
 }
 
 resource "aws_lb_target_group" "fargate" {
