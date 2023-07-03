@@ -1,0 +1,75 @@
+[
+  {
+    "name": "aws-otel-collector",
+    "image": "amazon/aws-otel-collector",
+    "command": [
+      "${otel_command}"
+    ],
+    "essential": true,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/${cluster_name}/ecs-aws-otel-sidecar-collector",
+        "awslogs-region": "${region}",
+        "awslogs-stream-prefix": "ecs",
+        "awslogs-create-group": "True"
+      }
+    },
+    "healthCheck": {
+      "command": [
+        "/healthcheck"
+      ],
+      "interval": 5,
+      "timeout": 6,
+      "retries": 5,
+      "startPeriod": 1
+    }
+  },
+  {
+    "name": "aws-otel-emitter",
+    "image": "public.ecr.aws/aws-otel-test/aws-otel-goxray-sample-app:latest",
+    "essential": false,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/${cluster_name}/ecs-aws-otel-sidecar-app",
+        "awslogs-region": "${region}",
+        "awslogs-stream-prefix": "ecs",
+        "awslogs-create-group": "True"
+      }
+    },
+    "dependsOn": [
+      {
+        "containerName": "aws-otel-collector",
+        "condition": "START"
+      }
+    ]
+  },
+  {
+    "image": "${app_image}",
+    "name": "${app_name}",
+		"portMappings" :[
+			{
+				"containerPort": 8080, 
+        "hostPort": 8080, 
+        "protocol": "tcp"
+			}
+		],
+    "essential": false,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/${cluster_name}/${app_name}",
+        "awslogs-region": "${region}",
+        "awslogs-stream-prefix": "ecs",
+        "awslogs-create-group": "True"
+      }
+    },
+    "dependsOn": [
+      {
+        "containerName": "aws-otel-collector",
+        "condition": "START"
+      }
+    ]
+  }
+]
