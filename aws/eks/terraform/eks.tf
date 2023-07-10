@@ -66,7 +66,7 @@ module "eks" {
           namespace = "default"
         },
         {
-          namespace = "opentelemetry-operator-system"
+          namespace = "fargate-container-insights"
         },
         {
           namespace = "cert-manager"
@@ -142,30 +142,3 @@ resource "aws_iam_policy" "additional" {
   })
 }
 
-resource "helm_release" "cert_manager" {
-  name       = "cert-manager"
-  repository = "https://charts.jetstack.io"
-  chart      = "cert-manager"
-  version    = "1.12"
-  namespace  = "cert-manager"
-  create_namespace = true
-
-  set {
-    name  = "installCRDs"
-    value = "true"
-  }
-
-  set {
-    name  = "webhook.securePort"
-    value = "10260"
-  }
-  lifecycle {
-    ignore_changes = [metadata]
-  }
-}
-
-resource "aws_eks_addon" "example" {
-  depends_on = [ helm_release.cert_manager ]
-  cluster_name = module.eks.cluster_name
-  addon_name   = "adot"
-}
