@@ -7,6 +7,7 @@ import com.google.cloud.opentelemetry.trace.TraceConfiguration;
 import com.google.cloud.opentelemetry.trace.TraceExporter;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
@@ -51,10 +52,13 @@ public class DemoApplication implements HttpFunction {
 
     @Override
     public void service(HttpRequest request, HttpResponse response) throws IOException {
-        Span span = openTelemetrySdk.getTracer(INSTRUMENTATION_SCOPE_NAME).spanBuilder("service function").startSpan();
+        Span span = openTelemetrySdk.getTracer(INSTRUMENTATION_SCOPE_NAME).spanBuilder("/java-http-function")
+                .setSpanKind(SpanKind.SERVER).startSpan();
         BufferedWriter writer = response.getWriter();
         writer.write("Hello World!");
         span.addEvent("HTTP Request");
+        span.setAttribute("http.method", request.getMethod());
+        span.setAttribute("http.path", request.getPath());
         doWork("doWork called");
         span.end();
         // Flush all bufferd traces
