@@ -5,13 +5,16 @@ import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
 import com.google.cloud.opentelemetry.trace.TraceConfiguration;
 import com.google.cloud.opentelemetry.trace.TraceExporter;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -25,12 +28,13 @@ public class DemoApplication implements HttpFunction {
     private static OpenTelemetrySdk openTelemetrySdk;
     public DemoApplication() {
         TraceConfiguration configuration = TraceConfiguration.builder().setDeadline(Duration.ofMillis(30000)).build();
+        Resource resource = Resource.getDefault().merge(Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, "java-http-function")));
         SpanExporter traceExporter = TraceExporter.createWithConfiguration(configuration);
         openTelemetrySdk = OpenTelemetrySdk.builder()
                 .setTracerProvider(
                     SdkTracerProvider.builder().addSpanProcessor(
                             BatchSpanProcessor.builder(traceExporter).build()
-                    ).build()).buildAndRegisterGlobal();
+                    ).setResource(resource).build()).buildAndRegisterGlobal();
     }
 
     private static void doWork(String description) {
