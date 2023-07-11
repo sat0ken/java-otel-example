@@ -20,6 +20,7 @@ import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -42,7 +43,9 @@ public class DemoApplication implements HttpFunction {
         Span span = openTelemetrySdk.getTracer(INSTRUMENTATION_SCOPE_NAME).spanBuilder(description).startSpan();
         try (Scope scope = span.makeCurrent()) {
             span.addEvent("doWork function");
+            span.setAttribute("Start sleep", LocalDateTime.now().toString());
             Thread.sleep(100 + random.nextInt(5) * 100);
+            span.setAttribute("End sleep", LocalDateTime.now().toString());
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
