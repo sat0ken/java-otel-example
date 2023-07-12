@@ -6,7 +6,7 @@ RUN --mount=type=cache,target=/root/.gradle ./gradlew bootJar
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-ADD https://github.com/aws-observability/aws-otel-java-instrumentation/releases/download/v1.27.0/aws-opentelemetry-agent.jar /app/aws-opentelemetry-agent.jar
-ENV JAVA_TOOL_OPTIONS "-javaagent:/app/aws-opentelemetry-agent.jar"
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
+ENV JAVA_TOOL_OPTIONS "-javaagent:/app/opentelemetry-javaagent.jar"
 COPY --from=build /workspace/app/build/libs/*.jar /app
 ENTRYPOINT ["java","-jar","/app/demo-0.0.1-SNAPSHOT.jar"]
