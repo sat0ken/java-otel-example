@@ -1,13 +1,17 @@
 package com.example.demo.demo;
 
 import com.google.cloud.opentelemetry.trace.TraceConfiguration;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
+import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,18 +37,21 @@ public class DemoController {
     public DemoController() {
         TraceConfiguration configuration = TraceConfiguration.builder().setDeadline(Duration.ofMillis(3000)).build();
         SpanExporter traceExporter = TraceExporter.createWithConfiguration(configuration);
+        Resource resource = Resource.getDefault().merge(Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, "cloudrun-service")));
         openTelemetrySdk = OpenTelemetrySdk.builder()
                 .setTracerProvider(
-                        SdkTracerProvider.builder()
-                                .addSpanProcessor(BatchSpanProcessor.builder(traceExporter).build())
-                                .build()
-                ).buildAndRegisterGlobal();
+                        SdkTracerProvider.builder().addSpanProcessor(
+                                BatchSpanProcessor.builder(traceExporter).build()
+                        ).setResource(resource).build()).buildAndRegisterGlobal();
     }
 
     @GetMapping("/rolldice")
     public String index(@RequestParam("player") Optional<String> player) {
-        Span span = openTelemetrySdk.getTracer(INSTRUMENTATION_SCOPE_NAME).spanBuilder("/rolldice").startSpan();
+        Span span = openTelemetrySdk.getTracer(INSTRUMENTATION_SCOPE_NAME).spanBuilder("/rolldice")
+                .setSpanKind(SpanKind.SERVER).startSpan();
+        span.addEvent("/rolldice called");
         int result = this.getRandomNumber(1, 6);
+        span.setAttribute("result is", result);
         if (player.isPresent()) {
             logger.info("{} is rolling the dice: {}", player.get(), result);
         } else {
