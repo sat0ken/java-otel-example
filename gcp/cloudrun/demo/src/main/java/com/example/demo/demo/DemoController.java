@@ -1,13 +1,12 @@
 package com.example.demo.demo;
 
 import com.google.cloud.opentelemetry.trace.TraceConfiguration;
+import com.google.cloud.opentelemetry.trace.TraceExporter;
+
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
@@ -17,10 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.google.cloud.opentelemetry.trace.TraceExporter;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -31,8 +28,6 @@ public class DemoController {
     private static final String INSTRUMENTATION_SCOPE_NAME = DemoController.class.getName();
 
     private static OpenTelemetrySdk openTelemetrySdk;
-    private static SdkMeterProvider METER_PROVIDER;
-    private static Meter METER;
 
     public DemoController() {
         TraceConfiguration configuration = TraceConfiguration.builder().setDeadline(Duration.ofMillis(3000)).build();
