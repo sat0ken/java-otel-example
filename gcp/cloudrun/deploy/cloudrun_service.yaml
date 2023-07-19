@@ -1,0 +1,44 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: opentelemetry-cloud-run
+  annotations:
+    run.googleapis.com/launch-stage: ALPHA
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen1
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/container-dependencies: '{"api":["collector"]}'
+    spec:
+      containers:
+      - image: asia-northeast1-docker.pkg.dev/test-satoken/java-example/api:0.0.1
+        name: api
+        env:
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://localhost:4317
+        ports:
+        - name: http1
+          containerPort: 8080
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      - image: otel/opentelemetry-collector-contrib
+        name: collector
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        volumeMounts:
+        - name: config
+          readOnly: true
+          mountPath: /etc/otelcol-contrib
+      volumes:
+      - name: config
+        secret:
+          secretName: otel-config
+          items:
+          - key: latest
+            path: config.yaml

@@ -1,21 +1,37 @@
+extensions:
+  memory_ballast:
+    size_mib: 512
+  zpages:
+    endpoint: localhost:55679
+
 receivers:
   otlp:
     protocols:
       grpc:
       http:
+
 exporters:
   googlecloud:
+    project: test-satoken
     log:
       default_log_name: opentelemetry.io/collector-exported-log
+  logging:
+    verbosity: detailed
+
 processors:
   memory_limiter:
-    check_interval: 1s
-    limit_percentage: 65
-    spike_limit_percentage: 20
+    # 75% of maximum memory up to 4G
+    limit_mib: 1536
+    # 25% of limit up to 2G
+    spike_limit_mib: 512
+    check_interval: 5s  
+    # limit_percentage: 65
+    # spike_limit_percentage: 20
   batch:
   resourcedetection:
     detectors: [gcp]
     timeout: 10s
+
 service:
   pipelines:
     traces:
@@ -26,7 +42,7 @@ service:
       receivers: [otlp]
       processors: [memory_limiter, batch]
       exporters: [googlecloud]
-    logs:
-      receivers: [otlp]
-      processors: [memory_limiter, batch]
-      exporters: [googlecloud]
+    # logs:
+    #   receivers: [otlp]
+    #   processors: [memory_limiter, batch]
+    #   exporters: [googlecloud]
