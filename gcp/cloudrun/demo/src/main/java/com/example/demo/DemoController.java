@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Random;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -19,6 +20,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DemoController {
     private static final Logger logger = LoggerFactory.getLogger(DemoController.class);
     private static final String INSTRUMENTATION_SCOPE_NAME = DemoController.class.getName();
+    
+    private final Random random = new Random();
     private final Tracer tracer;
 
     @Autowired
@@ -48,5 +51,10 @@ public class DemoController {
     @GetMapping("/health")
     public String health() {
         return "{\"status\" : \"ok\"}\n";
+    }
+
+    @GetMapping("/ping")
+    public String pong() {
+        return "{\"message\" : \"pong\"}\n";
     }
 }
